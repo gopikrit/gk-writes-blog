@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "name": "gk-writes-blogger",
+  "name": "gk-writes-blog",
   "builds": [
     {
       "src": "index.html",
