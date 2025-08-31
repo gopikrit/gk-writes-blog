@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GK Writes - Chronicles of History & Mythology</title>
+    <meta name="description" content="Explore the rich tapestry of Hindu mythology, Indian history, and world cultures through engaging stories and scholarly research.">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h2>GK Writes</h2>
+            <p>Loading your stories...</p>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="site-brand">
+                    <h1 class="site-title">GK Writes</h1>
+                    <p class="site-tagline">Chronicles of History & Mythology</p>
+                </div>
+                <nav class="main-nav">
+                    <a href="#" class="nav-link" data-view="home">Home</a>
+                    <div class="dropdown">
+                        <button class="nav-link dropdown-toggle">Categories</button>
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item" data-category="all">All Categories</a>
+                            <a href="#" class="dropdown-item" data-category="Hindu Mythology">Hindu Mythology</a>
+                            <a href="#" class="dropdown-item" data-category="Indian History">Indian History</a>
+                            <a href="#" class="dropdown-item" data-category="Ancient Gods">Ancient Gods</a>
+                            <a href="#" class="dropdown-item" data-category="Greek Mythology">Greek Mythology</a>
+                            <a href="#" class="dropdown-item" data-category="Egyptian History">Egyptian History</a>
+                            <a href="#" class="dropdown-item" data-category="Norse Legends">Norse Legends</a>
+                            <a href="#" class="dropdown-item" data-category="Roman Empire">Roman Empire</a>
+                            <a href="#" class="dropdown-item" data-category="Medieval History">Medieval History</a>
+                            <a href="#" class="dropdown-item" data-category="World Mythology">World Mythology</a>
+                        </div>
+                    </div>
+                    <a href="#" class="nav-link" data-view="about">About</a>
+                    <button class="btn btn--primary" data-view="create">Write New Post</button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <!-- Home View -->
+            <div id="home-view" class="view">
+                <!-- Search Bar -->
+                <div class="search-section">
+                    <div class="search-container">
+                        <input type="text" id="search-input" placeholder="Search posts..." class="search-input">
+                        <button id="search-btn" class="search-btn">Search</button>
+                    </div>
+                </div>
+
+                <!-- Featured Post -->
+                <section class="featured-section">
+                    <h2 class="section-title">Featured Post</h2>
+                    <div id="featured-post" class="featured-post">
+                        <!-- Featured post will be inserted here -->
+                    </div>
+                </section>
+
+                <!-- Recent Posts -->
+                <section class="posts-section">
+                    <h2 class="section-title">Recent Posts</h2>
+                    <div id="posts-grid" class="posts-grid">
+                        <!-- Posts will be inserted here -->
+                    </div>
+                    
+                    <!-- Load More Button -->
+                    <div class="load-more-section" id="load-more-section" style="text-align: center; margin-top: 2rem;">
+                        <button id="load-more-btn" class="btn btn--outline" style="display: none;">Load More Posts</button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Post View -->
+            <div id="post-view" class="view hidden">
+                <article class="post-article">
+                    <header class="post-header">
+                        <div class="post-meta">
+                            <span class="post-category" id="post-category"></span>
+                            <span class="post-date" id="post-date"></span>
+                            <span class="post-read-time" id="post-read-time"></span>
+                        </div>
+                        <h1 class="post-title" id="post-title"></h1>
+                        <div class="post-author">
+                            <span>By <strong id="post-author">GK Writes</strong></span>
+                        </div>
+                    </header>
+                    <div class="post-content" id="post-content">
+                        <!-- Post content will be inserted here -->
+                    </div>
+                    <footer class="post-footer">
+                        <div class="post-tags">
+                            <span class="tags-label">Tags:</span>
+                            <div id="post-tags" class="tags-list"></div>
+                        </div>
+                        <div class="post-actions">
+                            <button class="btn btn--secondary" onclick="showView('home')">← Back to Home</button>
+                            <button class="btn btn--outline" id="edit-post-btn" style="display: none;">Edit Post</button>
+                            <button class="btn btn--outline" onclick="sharePost()">Share Post</button>
+                        </div>
+                    </footer>
+                </article>
+            </div>
+
+            <!-- Create/Edit Post View -->
+            <div id="create-view" class="view hidden">
+                <div class="create-post">
+                    <header class="create-header">
+                        <h2 id="create-title">Write New Post</h2>
+                        <div class="create-actions">
+                            <button class="btn btn--secondary" onclick="showView('home')">← Back</button>
+                        </div>
+                    </header>
+                    
+                    <form id="post-form" class="post-form">
+                        <div class="form-group">
+                            <label for="title-input">Title</label>
+                            <input type="text" id="title-input" class="form-control" placeholder="Enter post title..." required>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="category-select">Category</label>
+                                <select id="category-select" class="form-control" required>
+                                    <option value="">Select a category</option>
+                                    <option value="Hindu Mythology">Hindu Mythology</option>
+                                    <option value="Indian History">Indian History</option>
+                                    <option value="Ancient Gods">Ancient Gods</option>
+                                    <option value="Greek Mythology">Greek Mythology</option>
+                                    <option value="Egyptian History">Egyptian History</option>
+                                    <option value="Norse Legends">Norse Legends</option>
+                                    <option value="Roman Empire">Roman Empire</option>
+                                    <option value="Medieval History">Medieval History</option>
+                                    <option value="World Mythology">World Mythology</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="tags-input">Tags</label>
+                                <input type="text" id="tags-input" class="form-control" placeholder="Enter tags separated by commas...">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="content-input">Content</label>
+                            <textarea id="content-input" class="form-control content-textarea" placeholder="Write your post content here... 
+
+Use ## for headings
+Use **text** for bold
+Use *text* for italic
+
+Start writing your amazing story!" required></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn--outline" id="preview-btn">Preview</button>
+                            <button type="button" class="btn btn--secondary" id="save-draft-btn">Save Draft</button>
+                            <button type="submit" class="btn btn--primary" id="publish-btn">Publish Post</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Preview View -->
+            <div id="preview-view" class="view hidden">
+                <div class="preview-container">
+                    <header class="preview-header">
+                        <h2>Preview Post</h2>
+                        <div class="preview-actions">
+                            <button class="btn btn--secondary" onclick="showView('create')">← Back to Editor</button>
+                        </div>
+                    </header>
+                    
+                    <article class="post-article">
+                        <header class="post-header">
+                            <div class="post-meta">
+                                <span class="post-category" id="preview-category"></span>
+                                <span class="post-date" id="preview-date"></span>
+                            </div>
+                            <h1 class="post-title" id="preview-title"></h1>
+                            <div class="post-author">
+                                <span>By <strong>GK Writes</strong></span>
+                            </div>
+                        </header>
+                        <div class="post-content" id="preview-content"></div>
+                        <footer class="post-footer">
+                            <div class="post-tags">
+                                <span class="tags-label">Tags:</span>
+                                <div id="preview-tags" class="tags-list"></div>
+                            </div>
+                        </footer>
+                    </article>
+                </div>
+            </div>
+
+            <!-- About View -->
+            <div id="about-view" class="view hidden">
+                <div class="about-container">
+                    <header class="about-header">
+                        <h2>About GK Writes</h2>
+                        <div class="about-actions">
+                            <button class="btn btn--secondary" onclick="showView('home')">← Back to Home</button>
+                        </div>
+                    </header>
+                    
+                    <div class="about-content">
+                        <div class="about-section">
+                            <h3>Welcome to GK Writes</h3>
+                            <p>Welcome to GK Writes, your gateway to exploring the rich tapestry of history and mythology from around the world. From ancient Hindu deities to Greek gods, from Egyptian pharaohs to Norse legends, we delve deep into the stories that shaped civilizations and continue to inspire us today.</p>
+                            
+                            <p>Our mission is to bring these fascinating tales of gods, heroes, and historical figures to life through engaging storytelling, scholarly research, and clear, beautiful writing. Whether you're interested in the cosmic philosophy of the Dashavatar, the epic battles of the Mahabharata, or the wisdom of ancient civilizations, you'll find something here to capture your imagination.</p>
+                        </div>
+                        
+                        <div class="about-section">
+                            <h3>What You'll Find Here</h3>
+                            <ul>
+                                <li><strong>Hindu Mythology:</strong> Stories of Vishnu's avatars, Shiva's cosmic dance, Ganesha's wisdom, and the great epics</li>
+                                <li><strong>Indian History:</strong> Ancient civilizations, royal dynasties, and cultural heritage</li>
+                                <li><strong>World Mythology:</strong> Greek, Norse, Egyptian, and other mythological traditions</li>
+                                <li><strong>Historical Narratives:</strong> Tales from ancient civilizations and medieval times</li>
+                                <li><strong>Scholarly Approach:</strong> Well-researched content that honors traditional sources</li>
+                                <li><strong>Cultural Insights:</strong> Understanding how these stories shaped human civilization</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="about-section">
+                            <h3>Platform Features</h3>
+                            <ul>
+                                <li>✅ <strong>Cloud Storage:</strong> Posts are saved permanently in Firebase</li>
+                                <li>✅ <strong>Multi-Device Access:</strong> Write and read from anywhere</li>
+                                <li>✅ <strong>Clean Writing:</strong> Distraction-free, focused on great content</li>
+                                <li>✅ <strong>Real-time Sync:</strong> Changes appear instantly</li>
+                                <li>✅ <strong>Professional Hosting:</strong> Fast, reliable, and secure</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="about-section">
+                            <h3>Contact</h3>
+                            <p>Have questions, suggestions, or would like to contribute? Feel free to reach out:</p>
+                            <p><strong>Email:</strong> <a href="mailto:tgkrishna23@gmail.com">tgkrishna23@gmail.com</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-content">
+            <div class="sidebar-section">
+                <h3>Categories</h3>
+                <ul class="category-list">
+                    <li><a href="#" data-category="Hindu Mythology">Hindu Mythology</a></li>
+                    <li><a href="#" data-category="Indian History">Indian History</a></li>
+                    <li><a href="#" data-category="Ancient Gods">Ancient Gods</a></li>
+                    <li><a href="#" data-category="Greek Mythology">Greek Mythology</a></li>
+                    <li><a href="#" data-category="Egyptian History">Egyptian History</a></li>
+                    <li><a href="#" data-category="Norse Legends">Norse Legends</a></li>
+                    <li><a href="#" data-category="Roman Empire">Roman Empire</a></li>
+                    <li><a href="#" data-category="Medieval History">Medieval History</a></li>
+                    <li><a href="#" data-category="World Mythology">World Mythology</a></li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-section">
+                <h3>Recent Posts</h3>
+                <div id="sidebar-recent-posts" class="recent-posts">
+                    <!-- Recent posts will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>GK Writes</h4>
+                    <p>Chronicles of History & Mythology</p>
+                    <p><small>Powered by Firebase & Vercel</small></p>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: <a href="mailto:tgkrishna23@gmail.com">tgkrishna23@gmail.com</a></p>
+                </div>
+                <div class="footer-section">
+                    <h4>Categories</h4>
+                    <ul>
+                        <li><a href="#" data-category="Hindu Mythology">Hindu Mythology</a></li>
+                        <li><a href="#" data-category="Indian History">Indian History</a></li>
+                        <li><a href="#" data-category="Ancient Gods">Ancient Gods</a></li>
+                        <li><a href="#" data-category="World Mythology">World Mythology</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 GK Writes. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
