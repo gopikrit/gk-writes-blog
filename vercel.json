@@ -1,16 +1,10 @@
 {
-  "name": "gk-writes-blogging",
   "version": 2,
+  "name": "gk-writes-blogger",
   "builds": [
     {
       "src": "index.html",
       "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
     }
   ],
   "headers": [
