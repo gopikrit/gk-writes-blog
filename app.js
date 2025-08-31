@@ -1,4 +1,4 @@
-// GK Writes - Blog Application with Firebase
+// jGK Writes - Blog Application with Firebase
 // Clean, fast, focused on great content
 
 // Application State
