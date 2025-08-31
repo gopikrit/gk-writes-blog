@@ -569,3 +569,254 @@ document.addEventListener('DOMContentLoaded', initializeApp);
 window.showView = showView;
 window.showPost = showPost;
 window.clearSearch = clearSearch;
+
+// ===========================================
+// INSTANT BLOG DATA STORAGE SOLUTION
+// ===========================================
+// Add this code to your existing app.js file
+// Posts will be saved permanently in browser!
+
+// ADD THESE FUNCTIONS TO YOUR EXISTING app.js:
+
+// Save posts to browser localStorage
+function savePosts() {
+  try {
+    localStorage.setItem('gk-writes-posts', JSON.stringify(posts));
+    console.log('✅ Posts saved successfully');
+  } catch (error) {
+    console.error('❌ Error saving posts:', error);
+    alert('Storage full! Please export your posts as backup.');
+  }
+}
+
+// Load posts from localStorage
+function loadPosts() {
+  try {
+    const savedPosts = localStorage.getItem('gk-writes-posts');
+    if (savedPosts) {
+      posts = JSON.parse(savedPosts);
+      console.log('✅ Loaded', posts.length, 'posts from storage');
+      return posts;
+    } else {
+      // First time - use sample data
+      posts = [...sampleData.samplePosts];
+      savePosts(); // Save sample data
+      console.log('✅ Initialized with sample data');
+      return posts;
+    }
+  } catch (error) {
+    console.error('❌ Error loading posts:', error);
+    posts = [...sampleData.samplePosts];
+    return posts;
+  }
+}
+
+// MODIFY YOUR EXISTING FUNCTIONS:
+
+// Update createNewPost function (find and replace)
+function createNewPost(formData) {
+  const newPost = {
+    id: Date.now(), // Unique timestamp ID
+    title: formData.title,
+    content: formData.content,
+    category: formData.category,
+    author: "GK Writes",
+    date: new Date().toISOString().split('T')[0],
+    tags: formData.tags,
+    excerpt: extractExcerpt(formData.content),
+    readTime: calculateReadTime(formData.content),
+    featured: false,
+    featuredImage: formData.featuredImage
+  };
+  
+  posts.unshift(newPost);
+  savePosts(); // 🔥 ADD THIS LINE - SAVES TO STORAGE!
+  
+  showView('home');
+  renderPosts();
+  renderSidebar();
+  
+  alert('✅ Post published and saved permanently!');
+}
+
+// Update updatePost function (find and replace)
+function updatePost(postId, formData) {
+  const postIndex = posts.findIndex(p => p.id === postId);
+  if (postIndex === -1) return;
+  
+  posts[postIndex] = {
+    ...posts[postIndex],
+    title: formData.title,
+    content: formData.content,
+    category: formData.category,
+    tags: formData.tags,
+    excerpt: extractExcerpt(formData.content),
+    featuredImage: formData.featuredImage
+  };
+  
+  savePosts(); // 🔥 ADD THIS LINE - SAVES TO STORAGE!
+  
+  editingPostId = null;
+  showView('home');
+  renderPosts();
+  renderSidebar();
+  
+  alert('✅ Post updated and saved!');
+}
+
+// Update initializeApp function (find and replace)
+function initializeApp() {
+  // 🔥 CHANGE THIS LINE - LOAD FROM STORAGE FIRST:
+  loadPosts(); // This replaces: posts = [...sampleData.samplePosts];
+  
+  // Keep everything else the same:
+  setupEventListeners();
+  showView('home');
+  renderPosts();
+  renderSidebar();
+}
+
+// BONUS: Add backup/restore functions
+
+// Export all posts as JSON file (backup)
+function exportPosts() {
+  const dataStr = JSON.stringify(posts, null, 2);
+  const dataBlob = new Blob([dataStr], {type: 'application/json'});
+  const url = URL.createObjectURL(dataBlob);
+  
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `gk-writes-backup-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  URL.revokeObjectURL(url);
+  alert('✅ Posts exported successfully!');
+}
+
+// Import posts from JSON file
+function importPosts(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const importedPosts = JSON.parse(e.target.result);
+      if (confirm(`Import ${importedPosts.length} posts? This will replace all current posts.`)) {
+        posts = importedPosts;
+        savePosts();
+        renderPosts();
+        renderSidebar();
+        alert('✅ Posts imported successfully!');
+      }
+    } catch (error) {
+      alert('❌ Error importing posts. Please check the file format.');
+      console.error(error);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// Delete post function
+function deletePost(postId) {
+  if (confirm('🗑️ Are you sure you want to delete this post?')) {
+    const postIndex = posts.findIndex(p => p.id === postId);
+    if (postIndex !== -1) {
+      const deletedPost = posts.splice(postIndex, 1)[0];
+      savePosts(); // Save after deletion
+      
+      showView('home');
+      renderPosts();
+      renderSidebar();
+      
+      alert(`✅ "${deletedPost.title}" deleted successfully!`);
+    }
+  }
+}
+
+// Clear all data (reset to sample posts)
+function resetBlog() {
+  if (confirm('🚨 This will delete ALL posts and reset to sample data. Are you sure?')) {
+    localStorage.removeItem('gk-writes-posts');
+    posts = [...sampleData.samplePosts];
+    savePosts();
+    renderPosts();
+    renderSidebar();
+    alert('✅ Blog reset to sample data!');
+  }
+}
+
+// Storage info function
+function showStorageInfo() {
+  const savedData = localStorage.getItem('gk-writes-posts');
+  const sizeInBytes = savedData ? savedData.length : 0;
+  const sizeInKB = (sizeInBytes / 1024).toFixed(2);
+  const sizeInMB = (sizeInBytes / 1024 / 1024).toFixed(2);
+  
+  const info = `
+📊 GK Writes Storage Information:
+
+📝 Total Posts: ${posts.length}
+💾 Storage Used: ${sizeInKB} KB (${sizeInMB} MB)
+📅 Last Updated: ${new Date().toLocaleString()}
+
+💡 Tips:
+• Export your posts regularly as backup
+• Browser storage limit: ~5-10 MB
+• Data persists until browser cache cleared
+• Works offline once loaded
+  `;
+  
+  alert(info);
+}
+
+// ===========================================
+// ADD THESE BUTTONS TO YOUR HTML (optional)
+// ===========================================
+/*
+Add these buttons to your about page or create an admin panel:
+
+<div class="admin-controls" style="margin: 20px 0; text-align: center;">
+  <h3>📊 Blog Management</h3>
+  
+  <button onclick="exportPosts()" class="btn btn--secondary">
+    📥 Export Posts (Backup)
+  </button>
+  
+  <label for="import-file" class="btn btn--secondary" style="margin-left: 10px;">
+    📤 Import Posts
+    <input type="file" id="import-file" accept=".json" onchange="importPosts(event)" style="display: none;">
+  </label>
+  
+  <button onclick="showStorageInfo()" class="btn btn--outline" style="margin-left: 10px;">
+    ℹ️ Storage Info
+  </button>
+  
+  <button onclick="resetBlog()" class="btn btn--secondary" style="margin-left: 10px; background: #e74c3c;">
+    🔄 Reset Blog
+  </button>
+</div>
+*/
+
+// ===========================================
+// INSTALLATION CHECKLIST
+// ===========================================
+/*
+✅ STEP 1: Copy all functions above to your app.js file
+✅ STEP 2: Update your 3 existing functions (createNewPost, updatePost, initializeApp)  
+✅ STEP 3: Test by writing a new blog post
+✅ STEP 4: Refresh page - your post should still be there!
+✅ STEP 5: Add admin buttons to your HTML (optional)
+
+🎉 DONE! Your blog now saves data permanently!
+
+📝 What happens now:
+• New posts are saved automatically
+• Data persists after browser refresh
+• Works offline once loaded  
+• Export/import for backups
+• Up to ~5MB storage (thousands of posts)
+*/
+
